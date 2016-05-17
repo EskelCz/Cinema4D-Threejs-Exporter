@@ -1,0 +1,6 @@
+// C4D-StringResource
+
+STRINGTABLE
+{
+	PLUGIN_NAME_STR			"Three.js Exporter";
+}

@@ -1,0 +1,9 @@
+// C4D-DialogResource
+
+DIALOGSTRINGS MAINDIALOG
+{
+	//main dialog 
+	TITLE_STR					"Three.js exporter v.0.0.1";
+	INSTRUCTION_STR				"Choose what to export for the selected object";
+	DESTINATION_STR				"Choose destination";
+}
