@@ -25,8 +25,21 @@ class MainDialog(c4d.gui.GeDialog):
 	#and reset values
 	def InitValues(self): 
 
-		# init the sliders
-		#self.SetReal(ids.MAINDIALOG_SLIDER_EDITOR, 2, 0, 6, 1.0, c4d.FORMAT_LONG)
+		# set values
+		self.SetString(ids.PRECISION, 6)
+		self.SetBool(ids.PRETTY, True)
+		self.SetBool(ids.TRIANGULATE, True)
+		self.SetBool(ids.VERTICES, True)
+		self.SetBool(ids.FACES, True)
+		self.SetBool(ids.NORMALS, True)
+		self.SetInt32(ids.NORMALSELECT, ids.NORMALSVERTEX)
+		self.SetBool(ids.UVS, True)
+		self.SetBool(ids.FLIPV, True)
+		self.SetBool(ids.BONES, True)
+		self.SetBool(ids.WEIGHTS, True)
+		self.SetBool(ids.SKANIM, True)
+		self.SetString(ids.INFLUENCES, 2)
+		self.SetString(ids.FPS, 30)
 
 		# disable elements that are dependent on checkbox-settings
 		#self.Enable(ids.MAINDIALOG_SLIDER_EDITOR, False)

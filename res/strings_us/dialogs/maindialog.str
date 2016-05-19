@@ -6,4 +6,21 @@ DIALOGSTRINGS MAINDIALOG
 	TITLE_STR					"Three.js exporter v.0.0.1";
 	INSTRUCTION_STR				"Choose what to export for the selected object";
 	DESTINATION_STR				"Choose destination";
+	PRETTY_STR					"Pretty output";
+	PRECISION_STR				"Float precision: ";
+	TRIANGULATE_STR				"Triangulate";
+	PHONG_STR					"Break phong";
+	VERTICES_STR 				"Export vertices";
+	FACES_STR					"Export faces";
+	NORMALS_STR					"Export normals: ";
+	UVS_STR						"Export UVs";
+	BONES_STR					"Export bones: ";
+	WEIGHTS_STR					"Export weights";
+	SKANIM_STR					"Export skeletal animations";
+	INFLUENCES_STR				"Influences per vertex: ";
+	FPS_STR						"Frames per second: ";
+	NORMALSFACE_STR				"Face";
+	NORMALSVERTEX_STR			"Vertex";
+	FLIPU_STR					"Flip U";
+	FLIPV_STR					"Flip V";
 }
