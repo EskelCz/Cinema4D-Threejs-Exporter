@@ -3,6 +3,7 @@
 enum
 {
 	// elements
+	INSTRUCTION			= 1000,
 	MAINDIALOG			= 1001,
 	DESTINATION			= 1002,
 	PRETTY				= 1003,
@@ -24,6 +25,8 @@ enum
 	FLIPV				= 1019,
 	BONESELECT			= 1020,
 	NORMALSELECT		= 1021,
+	INFLUENCESLABEL		= 1022,
+	FPSLABEL			= 1023,
 
 	// strings
 	PLUGIN_NAME_STR		= 2000,
