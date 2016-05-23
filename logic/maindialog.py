@@ -1,3 +1,5 @@
+# coding=UTF-8
+
 import c4d
 
 from c4d import documents
@@ -109,31 +111,60 @@ class MainDialog(c4d.gui.GeDialog):
 		self.Enable(ids.FPSLABEL, value)
 		self.Enable(ids.FPS, value)
 
-
 	# called on every GUI-interaction - check the 'id' against those of
 	#your GUI elements
 	def Command(self, id, msg):
-			  
+
+		# normals
+		if(self.GetBool(ids.NORMALS) == False):
+			self.Enable(ids.NORMALSELECT, False)
+		else:
+			self.Enable(ids.NORMALSELECT, True)
+
+		# UVs
+		if(self.GetBool(ids.UVS) == False):
+			self.Enable(ids.FLIPU, False)
+			self.Enable(ids.FLIPV, False)
+		else:
+			self.Enable(ids.FLIPU, True)
+			self.Enable(ids.FLIPV, True)
+
+		# bones
+		if(self.GetBool(ids.BONES) == False):
+			self.Enable(ids.BONESELECT, False)
+		else:
+			self.Enable(ids.BONESELECT, True)
+
+		# weights
+		if(self.GetBool(ids.WEIGHTS) == False):
+			self.Enable(ids.INFLUENCES, False)
+		else:
+			self.Enable(ids.INFLUENCES, True)
+
+		# animations
+		if(self.GetBool(ids.SKANIM) == False):
+			self.Enable(ids.FPS, False)
+		else:
+			self.Enable(ids.FPS, True)
+
 		# "Ok"
 		if id == 1:   
-			"""
-			enableState = 0
-			# collect the needed parameters and...
-			if self.GetBool(ids.MAINDIALOG_CHECK_ENABLE):
-				if self.GetLong(ids.MAINDIALOG_RADIO_GRP) == ids.MAINDIALOG_RADIO_DALL:
-					enableState = 1
-						
-				if self.GetLong(ids.MAINDIALOG_RADIO_GRP) == ids.MAINDIALOG_RADIO_EALL:
-					enableState = 2
 
-			# ...run the exporter.
-			result = worker.work(aEnabledState  = enableState, 
-								 aSetEditor     = self.GetBool(ids.MAINDIALOG_CHECK_SETEDITOR),
-								 aSetRender     = self.GetBool(ids.MAINDIALOG_CHECK_SETRENDER),
-								 aEditor        = self.GetLong(ids.MAINDIALOG_SLIDER_EDITOR),
-								 aRender        = self.GetLong(ids.MAINDIALOG_SLIDER_RENDER),
-								 aInc           = self.GetBool(ids.MAINDIALOG_CHECK_INC))
-			"""
+			# Save file
+			self.folder = self.doc.GetDocumentPath()
+
+			if self.GetBool(ids.DESTINATION) == True or self.folder == '':
+				self.path = c4d.storage.LoadDialog(title="Save File for JSON Export", flags=c4d.FILESELECT_SAVE, force_suffix="json")
+				if self.path == None:
+					c4d.gui.MessageDialog('Canceled: 	✘ Please specify an output folder')
+					return False
+			else:
+				self.path = self.folder + '/' + self.doc.GetDocumentName().replace('.c4d', '') + '.json'
+
+			writer = ThreeJsWriter()
+			writer.write(self)
+
+			self.Close()
 
 		# "Cancel"
 		if id == 2:

@@ -6,6 +6,9 @@ from c4d import documents
 class ThreeJsWriter(object):
 
 	def write(self, settings):
+
+		print settings
+		"""
 		self.settings = settings
 		self.vertices = []
 		self.faces = []
@@ -94,6 +97,9 @@ class ThreeJsWriter(object):
 				f.write(json.dumps(output, sort_keys=True, indent=4, separators=(',', ': ')))
 			else:
 				f.write(json.dumps(output, separators=(",",":")))
+		"""
+
+
 
 	"""
 	HELPER METHODS
