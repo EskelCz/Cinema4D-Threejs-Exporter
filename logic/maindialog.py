@@ -161,7 +161,7 @@ class MainDialog(c4d.gui.GeDialog):
 			else:
 				self.path = self.folder + '/' + self.doc.GetDocumentName().replace('.c4d', '') + '.json'
 
-			writer = ThreeJsWriter()
+			writer = exporter.ThreeJsWriter()
 			writer.write(self)
 
 			self.Close()

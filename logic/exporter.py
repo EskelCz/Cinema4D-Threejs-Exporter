@@ -1,104 +1,141 @@
 # coding=UTF-8
 
+import sys
+import os.path
+import json
+import shutil
 import c4d
-from c4d import documents
+import math
+import ctypes
+
+from logic import ids
+from collections import defaultdict, OrderedDict
+from c4d import documents, UVWTag, storage, plugins, gui, modules, bitmaps, utils
+from c4d.utils import *
 
 class ThreeJsWriter(object):
 
-	def write(self, settings):
+	vertices = []
+	faces = []
+	normals = []
+	uvs = []
+	faceUVMap = defaultdict(list)
+	output = OrderedDict()
+	bones = []
+	skinIndices = []
+	skinWeights = []
+	influences = 0
+	animations = []
+	jointKeyframeSummary = {}
 
-		print settings
-		"""
-		self.settings = settings
-		self.vertices = []
-		self.faces = []
-		self.normals = []
-		self.uvs = []
-		self.faceUVMap = defaultdict(list)
-		self.bones = []
-		self.animations = []
-		self.skinIndices = []
-		self.skinWeights = []
-		self.jointKeyframeSummary = {}
-		self.mesh = op.GetClone() # create a clone to work on
-		self.fps = settings.fps
-		self.minTime = doc.GetMinTime()
-		self.maxTime = doc.GetMaxTime()
+	def write(self, dialog):
+
+		self.dialog = dialog
+		self.doc = documents.GetActiveDocument()
+		self.op  = self.doc.GetActiveObject()
+		self.mesh = self.op.GetClone() # create a clone to work on
+		self.fps = int(self.dialog.GetString(ids.FPS))
+		self.minTime = self.doc.GetMinTime()
+		self.maxTime = self.doc.GetMaxTime()
 		self.firstFrame = self.minTime.GetFrame(self.fps)
 		self.lastFrame = self.maxTime.GetFrame(self.fps)
+		currentTime = self.doc.GetTime()
+		self.currentFrame = currentTime.GetFrame(self.fps)
+		self.floatPrecision = int(self.dialog.GetString(ids.PRECISION))
 
 		print 'Exporting object \'' + self.mesh.GetName() + ':'
-		print ' '
-		print '✓     Created an internal clone'
+		print '\n✓     Created an internal clone'
 
-		# save current frame
-		currentTime = doc.GetTime()
-		self.currentFrame = currentTime.GetFrame(self.fps)
+		self.output['metadata'] = {
+			'formatVersion': 3.1,
+			'generatedBy': 'Cinema 4D Exporter ' + self.dialog.VERSION
+		}
 
-		if self.settings.triangulate == True:
+		# Mesh export
+		if self.dialog.GetBool(ids.TRIANGULATE) == True:
 			c4d.utils.SendModelingCommand(c4d.MCOMMAND_TRIANGULATE, [self.mesh])
 			print '✓     Mesh triangulated'
 
-		if self.settings.breakPhong == True:
+		if self.dialog.GetBool(ids.PHONG) == True:
 			c4d.utils.SendModelingCommand(c4d.MCOMMAND_BREAKPHONG, [self.mesh])
 			print '✓     Phong break done'
 
-		if hasattr(self.settings, 'armature'):
-			typeId = 1019362 # Joint
-			self.allJoints = []
-			FindObjects(self.settings.armature, typeId, self.allJoints)
+		if self.dialog.GetBool(ids.VERTICES):
+			self._exportVertices()
+			if self.vertices: self.output['vertices'] = self.vertices
+			print '✓     Vertices exported'
 
-		if hasattr(self.settings, 'bonesOn') and hasattr(self.settings, 'armature'):
-			# reset to bind pose?
-			self._exportBones()
-			print '✓     Bones exported'
+		if self.dialog.GetBool(ids.NORMALSFACE):
+			self._exportFaceNormals()
+			if self.normals: self.output['normals'] = self.normals
+			print '✓     Face normals exported'
 
-		if hasattr(self.settings, 'weightOn'):
-			self._exportWeights()
-			print "✓     Weights exported"
+		if self.dialog.GetBool(ids.NORMALSVERTEX):
+			self._exportVertexNormals()
+			if self.normals: self.output['normals'] = self.normals
+			print '✓     Vertex normals exported'
 
-		self._exportMesh()
+		if self.dialog.GetBool(ids.UVS):
+			for tag in self.mesh.GetTags():
+				tagName = tag.GetName()
+				if tagName == 'UVW' or tagName == 'UVTex':
+					uvtag = tag
+			if uvtag:
+				self._exportFaceVertexUVs(uvtag)
+				if self.uvs: self.output['uvs'] = [self.uvs]
+				print '✓     UVs exported'
 
-		if hasattr(self.settings, 'skeletalAnim') and hasattr(self.settings, 'armature'):
+		if self.dialog.GetBool(ids.FACES):
+			self._exportFaces()
+			if self.faces: self.output['faces'] = self.faces
+			print "✓     Faces exported"
+
+		# Bones
+		self.bonesOn = self.dialog.GetBool(ids.BONES)
+		if self.bonesOn:
+			bonesGUID = self.dialog.armatures[self.dialog.GetInt32(ids.BONESELECT)]
+			for obj in self.doc.GetObjects():
+				if obj.GetGUID() == bonesGUID:
+					self.armature = obj
+
+			if self.armature:
+				typeId = 1019362 # Joint
+				self.allJoints = []
+				FindObjects(self.armature, typeId, self.allJoints)
+				self._exportBones()
+				if self.bones: self.output['bones'] = self.bones
+				print '✓     Bones exported'
+
+		# Weights
+		if self.dialog.GetBool(ids.WEIGHTS):
+			for tag in self.mesh.GetTags():
+				tagName = tag.GetName()
+				if tagName == 'Weight':
+					weighttag = tag
+			if weighttag:
+				self.influences = int(self.dialog.GetString(ids.INFLUENCES))
+				self._exportWeights(weighttag, self.influences)
+				if self.influences: self.output['influencesPerVertex'] = self.influences
+				if self.skinIndices: self.output['skinIndices'] = self.skinIndices
+				if self.skinWeights: self.output['skinWeights'] = self.skinWeights
+				print "✓     Weights exported"
+
+		# Animations
+		if self.dialog.GetBool(ids.SKANIM) and self.armature:
 			self._exportKeyframeAnimations()
+			if self.animations: self.output['animations'] = self.animations
 			print '✓     Exported keyframe animations'
 
-		# return to original frame
-		self._goToFrame(self.currentFrame)
-
-		print ' '
-		print 'Saving to: ', self.settings.path
-
-		output = {
-			'metadata': {
-				'formatVersion': 3.1,
-				'generatedBy': 'Cinema 4D Exporter'
-			},
-
-			'vertices': self.vertices,
-			'uvs': [self.uvs],
-			'faces': self.faces,
-			'normals': self.normals,
-		}
-
-		if hasattr(self.settings, 'bonesOn') and hasattr(self.settings, 'armature'):
-			output['bones'] = self.bones
-
-		if hasattr(self.settings, 'weightOn'):
-			output['skinIndices'] = self.skinIndices
-			output['skinWeights'] = self.skinWeights
-			output['influencesPerVertex'] = self.settings.influencesPerVertex
-
-		if hasattr(self.settings, 'skeletalAnim'):
-			output['animations'] = self.animations
-
-		with file(self.settings.path, 'w') as f:
-			if hasattr(self.settings, 'prettyOutput'):
-				f.write(json.dumps(output, sort_keys=True, indent=4, separators=(',', ': ')))
+		# Save
+		print '\nSaving to: ', self.dialog.path
+		with file(self.dialog.path, 'w') as f:
+			if self.dialog.GetBool(ids.PRETTY):
+				f.write(json.dumps(self.output, indent=4, separators=(',', ': ')))
 			else:
-				f.write(json.dumps(output, separators=(",",":")))
-		"""
+				f.write(json.dumps(self.output, separators=(",",":")))
 
+		# Return to original frame
+		self._goToFrame(self.currentFrame)
 
 
 	"""
@@ -138,35 +175,15 @@ class ThreeJsWriter(object):
 	EXPORT METHODS
 	"""
 
-	def _exportMesh(self):
-		if hasattr(self.settings, 'vertices'):
-			self._exportVertices()
-
-		if hasattr(self.settings, 'faceNormals'):
-			self._exportFaceNormals()
-			print '✓     Face normals exported'
-
-		if hasattr(self.settings, 'vertexNormals'):
-			self._exportVertexNormals()
-			print '✓     Vertex normals exported'
-
-		if hasattr(self.settings, 'uvs'):
-			self._exportFaceVertexUVs()
-			print '✓     UVs exported'
-
-		if hasattr(self.settings, 'faces'):
-			self._exportFaces()
-			print "✓     Faces exported"
-
 	def _exportVertices(self):
 		for vector in self.mesh.GetAllPoints():
-			self.vertices += [round(vector.x, self.settings.floatPrecision)]
-			self.vertices += [round(vector.y, self.settings.floatPrecision)]
-			self.vertices += [round(vector.z, self.settings.floatPrecision)]
+			self.vertices += [round(vector.x, self.floatPrecision)]
+			self.vertices += [round(vector.y, self.floatPrecision)]
+			self.vertices += [round(vector.z, self.floatPrecision)]
 
 	def _exportFaceNormals(self):
 		for p in self.mesh.GetAllPolygons():
-			points = op.GetAllPoints()
+			points = self.mesh.GetAllPoints()
 			p1, p2, p4 = points[p.a], points[p.b], points[p.d]
 			normal = (p2 - p1).Cross(p4 - p1).GetNormalized()
 
@@ -178,14 +195,14 @@ class ThreeJsWriter(object):
 	def _exportVertexNormals(self):
 		for normal in self.mesh.CreatePhongNormals():
 			if not self._isNull(normal):	# probably not good enough to separate quads
-				self.normals += [round(normal.x, self.settings.floatPrecision), round(normal.y, self.settings.floatPrecision), round(normal.z, self.settings.floatPrecision)]
+				self.normals += [round(normal.x, self.floatPrecision), round(normal.y, self.floatPrecision), round(normal.z, self.floatPrecision)]
 
-	def _exportFaceVertexUVs(self):
+	def _exportFaceVertexUVs(self, uvtag):
 		uniqueUVs = []
 		key = 0
 
 		for p, face in enumerate(self.mesh.GetAllPolygons()):
-			uv = self.settings.uvtag.GetSlow(p)
+			uv = uvtag.GetSlow(p)
 
 			# if the face is quad, use D vertice as well
 			if face.IsTriangle(): 	vecList = ['a', 'b', 'c']
@@ -202,28 +219,29 @@ class ThreeJsWriter(object):
 					key += 1
 
 		for index, uv in enumerate(uniqueUVs):
-			if hasattr(self.settings, 'flipU'):
+			if self.dialog.GetBool(ids.FLIPU):
 				u = 1 - uv.x
 			else:
 				u = uv.x
-			if hasattr(self.settings, 'flipV'):
+			if self.dialog.GetBool(ids.FLIPV):
 				v = 1 - uv.y
 			else:
 				v = uv.y
-			self.uvs.append(round(u, self.settings.floatPrecision))
-			self.uvs.append(round(v, self.settings.floatPrecision))
+			self.uvs.append(round(u, self.floatPrecision))
+			self.uvs.append(round(v, self.floatPrecision))
 
 	def _exportFaces(self):
 
+		# Depends on faceUVMap
 		uvs = []
 
 		for index, face in enumerate(self.mesh.GetAllPolygons()):
 
 			hasMaterial = False										# not interested
 			hasFaceUvs = False 										# not supported in OBJ
-			hasFaceVertexUvs = self.settings.uvs
-			hasFaceNormals = self.settings.faceNormals
-			hasFaceVertexNormals = self.settings.vertexNormals
+			hasFaceVertexUvs = self.dialog.GetBool(ids.UVS)
+			hasFaceNormals = self.dialog.GetBool(ids.NORMALSFACE)
+			hasFaceVertexNormals = self.dialog.GetBool(ids.NORMALSVERTEX)
 			hasFaceColors = False 									# not interested
 			hasFaceVertexColors = False 							# not supported in OBJ
 
@@ -307,18 +325,16 @@ class ThreeJsWriter(object):
 		else:
 			return -1
 
-	def _exportWeights(self):
-		wtag = self.settings.weighttag
-		maxInfluences = self.settings.influencesPerVertex
-		jointCount = wtag.GetJointCount()
+	def _exportWeights(self, weighttag, influences):
+		jointCount = weighttag.GetJointCount()
 		vertexCount = self.mesh.GetPointCount()
 
 		# Iterate vertices and display weight for each bone
 		for vertexIndex in range(vertexCount):
 			numWeights = 0
 			for jointIndex in range(jointCount):
-				joint  = wtag.GetJoint(jointIndex, doc)
-				weight = wtag.GetWeight(jointIndex, vertexIndex)
+				joint  = weighttag.GetJoint(jointIndex, self.doc)
+				weight = weighttag.GetWeight(jointIndex, vertexIndex)
 
 				if weight > 0:
 					self.skinWeights.append(weight)
@@ -326,11 +342,11 @@ class ThreeJsWriter(object):
 					#self.skinIndices.append(jointIndex)
 					numWeights += 1
 
-			if numWeights > maxInfluences:
-				print '?     Warning: More than ' + str(maxInfluences) + ' influences on vertex id ' + vertexIndex
+			if numWeights > influences:
+				print '?     Warning: More than ' + str(influences) + ' influences on vertex id ' + vertexIndex
 
 			# append zeros (? shouldn't it be -1) for no bone id when there is no influence
-			for i in range(0, maxInfluences - numWeights):
+			for i in range(0, influences - numWeights):
 				self.skinWeights.append(0)
 				self.skinIndices.append(0)
 
@@ -390,8 +406,8 @@ class ThreeJsWriter(object):
 
 	def _goToFrame(self, frame):
 		time = c4d.BaseTime(frame, self.fps)
-		doc.SetTime(time)
-		doc.ExecutePasses(None, True, True, True, c4d.BUILDFLAGS_0) 	#try BUILDFLAGS_INTERNALRENDERER
+		self.doc.SetTime(time)
+		self.doc.ExecutePasses(None, True, True, True, c4d.BUILDFLAGS_0) 	#try BUILDFLAGS_INTERNALRENDERER
 		c4d.GeSyncMessage(c4d.EVMSG_TIMECHANGED)						#update timeline
 
 	def _getCurrentKeyframeData(self, joint, frame):
@@ -410,10 +426,10 @@ class ThreeJsWriter(object):
 		}
 
 	def _roundPos(self, pos):
-		return map(lambda x: round(x, self.settings.floatPrecision), [pos.x, pos.y, pos.z])
+		return map(lambda x: round(x, self.floatPrecision), [pos.x, pos.y, pos.z])
 
 	def _roundQuat(self, rot):
-		return map(lambda x: round(x, self.settings.floatPrecision), [rot.v.x, rot.v.y, rot.v.z, rot.w])
+		return map(lambda x: round(x, self.floatPrecision), [rot.v.x, rot.v.y, rot.v.z, rot.w])
 
 def FindObjects(obj, typeId, collection):
 	if obj.CheckType(typeId):
