@@ -55,7 +55,7 @@ class MainDialog(c4d.gui.GeDialog):
 	def InitValues(self): 
 
 		# set values
-		self.SetString(ids.PRECISION, 6)
+		self.SetInt32(ids.PRECISION, 6)
 		self.SetBool(ids.PRETTY, True)
 		self.SetBool(ids.TRIANGULATE, True)
 		self.SetBool(ids.VERTICES, True)
@@ -67,10 +67,10 @@ class MainDialog(c4d.gui.GeDialog):
 		self.SetBool(ids.BONES, True)
 		self.SetBool(ids.WEIGHTS, True)
 		self.SetBool(ids.SKANIM, True)
-		self.SetString(ids.INFLUENCES, 2)
-		self.SetString(ids.FPS, 30)
-		self.SetString(ids.POS, True)
-		self.SetString(ids.ROT, True)
+		self.SetInt32(ids.INFLUENCES, 2)
+		self.SetInt32(ids.FPS, 30)
+		self.SetBool(ids.POS, True)
+		self.SetBool(ids.ROT, True)
 
 		# disable animations if no bones found
 		if len(self.armatures) == 0:
@@ -78,12 +78,12 @@ class MainDialog(c4d.gui.GeDialog):
 			print '?     Warning: Joints not found'
 
 		# disable UV if no tag found
-		if hasattr(self, 'uvtag') and self.uvtag is None:
+		if self.GetBool(ids.UVS) and self.uvtag is None:
 			self.ToggleUV(False)
 			print '?     Warning: UV tag not found'
 
 		# disable weight if no tag found
-		if hasattr(self, 'weighttag') and self.weighttag is None:
+		if self.GetBool(ids.WEIGHTS) and self.weighttag is None:
 			self.ToggleWeight(False)
 			print '?     Warning: Weight tag not found'
 
@@ -115,9 +115,9 @@ class MainDialog(c4d.gui.GeDialog):
 		self.Enable(ids.POS, value)
 		self.Enable(ids.ROT, value)
 		self.Enable(ids.SCL, value)
-		self.SetString(ids.POS, value)
-		self.SetString(ids.ROT, value)
-		self.SetString(ids.SCL, value)
+		self.SetBool(ids.POS, value)
+		self.SetBool(ids.ROT, value)
+		self.SetBool(ids.SCL, value)
 
 	# called on every GUI-interaction - check the 'id' against those of
 	#your GUI elements

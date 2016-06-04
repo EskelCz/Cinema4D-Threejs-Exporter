@@ -34,14 +34,14 @@ class ThreeJsWriter(object):
 		self.doc = documents.GetActiveDocument()
 		self.op  = self.doc.GetActiveObject()
 		self.mesh = self.op.GetClone() # create a clone to work on
-		self.fps = int(self.dialog.GetString(ids.FPS))
+		self.fps = self.dialog.GetInt32(ids.FPS)
 		self.minTime = self.doc.GetMinTime()
 		self.maxTime = self.doc.GetMaxTime()
 		self.firstFrame = self.minTime.GetFrame(self.fps)
 		self.lastFrame = self.maxTime.GetFrame(self.fps)
 		currentTime = self.doc.GetTime()
 		self.currentFrame = currentTime.GetFrame(self.fps)
-		self.floatPrecision = int(self.dialog.GetString(ids.PRECISION))
+		self.floatPrecision = self.dialog.GetInt32(ids.PRECISION)
 
 		print 'Exporting object \'' + self.mesh.GetName() + ':'
 		print '\n✓     Created an internal clone'
@@ -113,7 +113,7 @@ class ThreeJsWriter(object):
 				if tagName == 'Weight':
 					weighttag = tag
 			if weighttag:
-				self.influences = int(self.dialog.GetString(ids.INFLUENCES))
+				self.influences = self.dialog.GetInt32(ids.INFLUENCES)
 				self._exportWeights(weighttag, self.influences)
 				if self.influences: self.output['influencesPerVertex'] = self.influences
 				if self.skinIndices: self.output['skinIndices'] = self.skinIndices
@@ -296,19 +296,21 @@ class ThreeJsWriter(object):
 			else:
 				parentIndex = -1
 
-			keyframe = {
+			initialPRS = {
 				"parent": parentIndex,
 				"name": joint.GetName()
 			}
 
 			if self.dialog.GetBool(ids.POS):
-				keyframe["pos"]: self._getPos(joint)
+				initialPRS["pos"] = self._getPos(joint)
 
-			if self.dialog.GetBool(ids.POS):
-				keyframe["rot"]: self._getRot(joint)
+			if self.dialog.GetBool(ids.ROT):
+				initialPRS["rotq"] = self._getRot(joint)
 
-			if self.dialog.GetBool(ids.POS):
-				keyframe["scl"]: self._getScl(joint)
+			if self.dialog.GetBool(ids.SCL):
+				initialPRS["scl"] = self._getScl(joint)
+
+			self.bones.append(initialPRS)
 
 	def _getPos(self, obj):
 		#locRelPos = joint.GetRelPos()
@@ -354,7 +356,7 @@ class ThreeJsWriter(object):
 					numWeights += 1
 
 			if numWeights > influences:
-				print '?     Warning: More than ' + str(influences) + ' influences on vertex id ' + vertexIndex
+				print '?     Warning: More than ' + str(influences) + ' influences on vertex id ' + str(vertexIndex)
 
 			# append zeros (? shouldn't it be -1) for no bone id when there is no influence
 			for i in range(0, influences - numWeights):
@@ -394,7 +396,7 @@ class ThreeJsWriter(object):
 			for track in joint.GetCTracks():
 				curve = track.GetCurve()
 				keyCount = curve.GetKeyCount()
-				print '  >     Track ' + track.GetName() + ' has ' + str(keyCount) + ' keyframes'
+				print '  >          Track ' + track.GetName() + ' has ' + str(keyCount) + ' keyframes'
 
 				for keyIndex in range(keyCount):
 					key = curve.GetKey(keyIndex)
@@ -434,13 +436,13 @@ class ThreeJsWriter(object):
 		}
 
 		if self.dialog.GetBool(ids.POS):
-			keyframe["pos"]: self._getPos(joint)
+			keyframe["pos"] = self._getPos(joint)
 
-		if self.dialog.GetBool(ids.POS):
-			keyframe["rot"]: self._getRot(joint)
+		if self.dialog.GetBool(ids.ROT):
+			keyframe["rot"] = self._getRot(joint)
 
-		if self.dialog.GetBool(ids.POS):
-			keyframe["scl"]: self._getScl(joint)
+		if self.dialog.GetBool(ids.SCL):
+			keyframe["scl"] = self._getScl(joint)
 
 		return keyframe
 

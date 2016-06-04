@@ -29,7 +29,7 @@ enum
 	FPSLABEL			= 1023,
 	POS					= 1024,
 	ROT					= 1025,
-	SCL					= 1026
+	SCL					= 1026,
 
 	// strings
 	PLUGIN_NAME_STR		= 2000,
@@ -54,7 +54,7 @@ enum
 	FLIPV_STR			= 2019,
 	POS_STR				= 2020,
 	ROT_STR				= 2021,
-	SCL_STR				= 2022
+	SCL_STR				= 2022,
 
 // End of symbol definition
   _DUMMY_ELEMENT_
