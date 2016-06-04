@@ -296,12 +296,19 @@ class ThreeJsWriter(object):
 			else:
 				parentIndex = -1
 
-			self.bones.append({
+			keyframe = {
 				"parent": parentIndex,
-				"name": joint.GetName(),
-				"pos": self._getPos(joint),
-				"rotq": self._getRot(joint)
-			})
+				"name": joint.GetName()
+			}
+
+			if self.dialog.GetBool(ids.POS):
+				keyframe["pos"]: self._getPos(joint)
+
+			if self.dialog.GetBool(ids.POS):
+				keyframe["rot"]: self._getRot(joint)
+
+			if self.dialog.GetBool(ids.POS):
+				keyframe["scl"]: self._getScl(joint)
 
 	def _getPos(self, obj):
 		#locRelPos = joint.GetRelPos()
@@ -315,6 +322,10 @@ class ThreeJsWriter(object):
 		rotq = c4d.Quaternion()
 		rotq.SetHPB(rot)
 		return self._roundQuat(rotq)
+
+	def _getScl(self, obj):
+		scl = obj.GetRelScale()
+		return self._roundScl(scl)
 
 	def _indexOfJoint(self, name):
 		if not hasattr(self, '_jointNames'):
@@ -418,15 +429,26 @@ class ThreeJsWriter(object):
 		else:
 			lastFrameTrimProtection = 0
 
-		return {
+		keyframe = {
 			'time': float(frame - self.firstFrame) / self.fps - lastFrameTrimProtection,
-			'pos': self._getPos(joint),
-			'rot': self._getRot(joint),
-			'scl': [1,1,1]
 		}
+
+		if self.dialog.GetBool(ids.POS):
+			keyframe["pos"]: self._getPos(joint)
+
+		if self.dialog.GetBool(ids.POS):
+			keyframe["rot"]: self._getRot(joint)
+
+		if self.dialog.GetBool(ids.POS):
+			keyframe["scl"]: self._getScl(joint)
+
+		return keyframe
 
 	def _roundPos(self, pos):
 		return map(lambda x: round(x, self.floatPrecision), [pos.x, pos.y, pos.z])
+
+	def _roundScl(self, scl):
+		return map(lambda x: round(x, self.floatPrecision), [scl.x, scl.y, scl.z])
 
 	def _roundQuat(self, rot):
 		return map(lambda x: round(x, self.floatPrecision), [rot.v.x, rot.v.y, rot.v.z, rot.w])

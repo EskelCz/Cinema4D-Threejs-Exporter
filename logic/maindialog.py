@@ -69,6 +69,8 @@ class MainDialog(c4d.gui.GeDialog):
 		self.SetBool(ids.SKANIM, True)
 		self.SetString(ids.INFLUENCES, 2)
 		self.SetString(ids.FPS, 30)
+		self.SetString(ids.POS, True)
+		self.SetString(ids.ROT, True)
 
 		# disable animations if no bones found
 		if len(self.armatures) == 0:
@@ -110,6 +112,12 @@ class MainDialog(c4d.gui.GeDialog):
 		self.Enable(ids.INFLUENCES, value)
 		self.Enable(ids.FPSLABEL, value)
 		self.Enable(ids.FPS, value)
+		self.Enable(ids.POS, value)
+		self.Enable(ids.ROT, value)
+		self.Enable(ids.SCL, value)
+		self.SetString(ids.POS, value)
+		self.SetString(ids.ROT, value)
+		self.SetString(ids.SCL, value)
 
 	# called on every GUI-interaction - check the 'id' against those of
 	#your GUI elements
@@ -138,14 +146,26 @@ class MainDialog(c4d.gui.GeDialog):
 		# weights
 		if(self.GetBool(ids.WEIGHTS) == False):
 			self.Enable(ids.INFLUENCES, False)
+			self.Enable(ids.POS, False)
+			self.Enable(ids.ROT, False)
+			self.Enable(ids.SCL, False)
 		else:
 			self.Enable(ids.INFLUENCES, True)
+			self.Enable(ids.POS, True)
+			self.Enable(ids.ROT, True)
+			self.Enable(ids.SCL, True)
 
 		# animations
 		if(self.GetBool(ids.SKANIM) == False):
 			self.Enable(ids.FPS, False)
+			self.Enable(ids.POS, False)
+			self.Enable(ids.ROT, False)
+			self.Enable(ids.SCL, False)
 		else:
 			self.Enable(ids.FPS, True)
+			self.Enable(ids.POS, True)
+			self.Enable(ids.ROT, True)
+			self.Enable(ids.SCL, True)
 
 		# "Ok"
 		if id == 1:   
