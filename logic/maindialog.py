@@ -20,6 +20,20 @@ class MainDialog(c4d.gui.GeDialog):
 		# kill the menu-bar
 		self.AddGadget(c4d.DIALOG_NOMENUBAR, ids.MAINDIALOG);
 
+	# Recurses a hierarchy, starting from op
+	def recurseHierarchy(op):
+		# ADD i
+		while op:
+			hasBoneChild op.GetDown()
+			self.armatures[i] = op.GetGUID()
+			self.AddChild(ids.BONESELECT, i, op.GetName())
+			self.recurseHierarchy op.GetNext()
+
+	def hasBoneChild(children):
+		for child in children
+			if child.GetType() == 5140: # Null
+				return True
+
 	# called when the dialog is opened - load or generate the GUI here
 	def CreateLayout(self):
 
@@ -35,11 +49,19 @@ class MainDialog(c4d.gui.GeDialog):
 		self.SetTitle('Three.js exporter v.' + self.VERSION)
 
 		# find bones
+		self.recurseHierarchy(self.doc.GetFirstObject())
+		###
 		for i, obj in enumerate(self.doc.GetObjects()):
-			if obj.GetType() == 1019362: # Joint
+			add = False
+			if obj.GetType() == 5140: # Null
+				children = obj.getDown()
+				print children
+			elif obj.GetType() == 1019362: # Joint
+				add = True
+			if add:
 				self.armatures[i] = obj.GetGUID()
 				self.AddChild(ids.BONESELECT, i, obj.GetName())
-
+		###
 		# find UV and Weight tag
 		for tag in self.op.GetTags():
 			tagName = tag.GetName()
