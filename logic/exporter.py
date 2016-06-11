@@ -118,10 +118,11 @@ class ThreeJsWriter(object):
 				if self.influences: self.output['influencesPerVertex'] = self.influences
 				if self.skinIndices: self.output['skinIndices'] = self.skinIndices
 				if self.skinWeights: self.output['skinWeights'] = self.skinWeights
-				print "✓     Weights exported"
+				print '✓     Weights exported'
 
 		# Animations
 		if self.dialog.GetBool(ids.SKANIM) and self.armature:
+			self._buildBoneKeyframeSummary()
 			self._exportKeyframeAnimations()
 			if self.animations: self.output['animations'] = self.animations
 			print '✓     Exported keyframe animations'
@@ -363,28 +364,6 @@ class ThreeJsWriter(object):
 				self.skinWeights.append(0)
 				self.skinIndices.append(0)
 
-	def _exportKeyframeAnimations(self):
-		hierarchy = []
-		i = -1
-
-		# CUT INTO MULTIPLE ANIMATIONS
-
-		self._buildBoneKeyframeSummary()
-
-		for joint in self.allJoints:
-			hierarchy.append({
-				"parent": i,
-				"keys": self._getBoneKeyframeData(joint)
-			})
-			i += 1
-
-		self.animations.append({
-			"name": "AnimationName",
-			"length": (self.maxTime - self.minTime).Get(),
-			"fps": self.fps,
-			"hierarchy": hierarchy
-		})
-
 	def _buildBoneKeyframeSummary(self):
 		# iterate curves for each bone, add frames to ordered unique list
 		for joint in self.allJoints:
@@ -405,6 +384,39 @@ class ThreeJsWriter(object):
 					frames.append(frame)
 
 			self.jointKeyframeSummary[joint.GetGUID()] = sorted(set(frames))
+
+	def _exportKeyframeAnimations(self):
+
+		# CUT INTO MULTIPLE ANIMATIONS
+		# get list of markers (name, key)
+		# if there are markers start from first
+		# if there are no markers start from first frame
+		# create animation and hierarchy objects for each segment
+		# fill it with keyframes
+
+		marker = c4d.documents.GetFirstMarker(self.doc)
+		if marker
+			print '✓     Markers found, segmenting animation'
+		else
+			print '✓     No markers, making single animation'
+
+
+		hierarchy = []
+		i = -1
+
+		for joint in self.allJoints:
+			hierarchy.append({
+				"parent": i,
+				"keys": self._getBoneKeyframeData(joint)
+			})
+			i += 1
+
+		self.animations.append({
+			"name": "AnimationName",
+			"length": (self.maxTime - self.minTime).Get(),
+			"fps": self.fps,
+			"hierarchy": hierarchy
+		})
 
 	def _getBoneKeyframeData(self, joint):
 		keys = []
