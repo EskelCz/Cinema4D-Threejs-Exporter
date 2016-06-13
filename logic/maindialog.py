@@ -8,7 +8,7 @@ from logic import exporter
 
 class MainDialog(c4d.gui.GeDialog):
 
-	VERSION = '0.0.1'
+	VERSION = '0.0.2'
 
 	uvtag = None
 	weighttag = None
