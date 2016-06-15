@@ -123,7 +123,7 @@ class ThreeJsWriter(object):
 
 		# Animations
 		if self.dialog.GetBool(ids.SKANIM) and self.armature:
-			self._buildBoneKeyframeSummary()
+			self._buildJointKeyframeSummary()
 			self._buildMarkerSummary()
 			self._exportKeyframeAnimations()
 			if self.animations: self.output['animations'] = self.animations
@@ -372,15 +372,16 @@ class ThreeJsWriter(object):
 		return marker[c4d.TLMARKER_TIME].Get()
 
 	def _buildMarkerSummary(self):
+		self.markers = []
 		curMarker = c4d.documents.GetFirstMarker(self.doc)
-
 		while curMarker is not None:
 			self.markers.append(curMarker)
 			curMarker = curMarker.GetNext()
 
 		self.markers.sort(key=self._getMarkerSecond)
 
-	def _buildBoneKeyframeSummary(self):
+	def _buildJointKeyframeSummary(self):
+		self.jointKeyframeSummary = {}
 		# iterate curves for each bone, add frames to ordered unique list
 		for joint in self.allJoints:
 			frames = []
@@ -410,7 +411,8 @@ class ThreeJsWriter(object):
 				nextIndex = i + 1
 				if nextIndex < len(self.markers):
 					nextMarker = self.markers[nextIndex]
-					end = nextMarker[c4d.TLMARKER_TIME]
+					oneFrame = c4d.BaseTime(1, self.fps)
+					end = nextMarker[c4d.TLMARKER_TIME] - oneFrame
 				else:
 					end = self.maxTime
 
