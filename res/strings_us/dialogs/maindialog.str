@@ -25,4 +25,6 @@ DIALOGSTRINGS MAINDIALOG
 	POS_STR						"Position";
 	ROT_STR						"Rotation";
 	SCL_STR						"Scale";
+	STARTFRAMELABEL_STR			"Start frame: ";
+	ENDFRAMELABEL_STR			"End frame: ";
 }
