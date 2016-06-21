@@ -22,6 +22,7 @@ class ThreeJsWriter(object):
 	faceUVMap = defaultdict(list)
 	output = OrderedDict()
 	bones = []
+	markers = []
 	skinIndices = []
 	skinWeights = []
 	influences = 0
@@ -118,10 +119,12 @@ class ThreeJsWriter(object):
 				if self.influences: self.output['influencesPerVertex'] = self.influences
 				if self.skinIndices: self.output['skinIndices'] = self.skinIndices
 				if self.skinWeights: self.output['skinWeights'] = self.skinWeights
-				print "✓     Weights exported"
+				print '✓     Weights exported'
 
 		# Animations
 		if self.dialog.GetBool(ids.SKANIM) and self.armature:
+			self._buildJointKeyframeSummary()
+			self._buildMarkerSummary()
 			self._exportKeyframeAnimations()
 			if self.animations: self.output['animations'] = self.animations
 			print '✓     Exported keyframe animations'
@@ -363,29 +366,22 @@ class ThreeJsWriter(object):
 				self.skinWeights.append(0)
 				self.skinIndices.append(0)
 
-	def _exportKeyframeAnimations(self):
-		hierarchy = []
-		i = -1
+	def _getMarkerSecond(self, marker):
+		if marker is None:
+			return None
+		return marker[c4d.TLMARKER_TIME].Get()
 
-		# CUT INTO MULTIPLE ANIMATIONS
+	def _buildMarkerSummary(self):
+		self.markers = []
+		curMarker = c4d.documents.GetFirstMarker(self.doc)
+		while curMarker is not None:
+			self.markers.append(curMarker)
+			curMarker = curMarker.GetNext()
 
-		self._buildBoneKeyframeSummary()
+		self.markers.sort(key=self._getMarkerSecond)
 
-		for joint in self.allJoints:
-			hierarchy.append({
-				"parent": i,
-				"keys": self._getBoneKeyframeData(joint)
-			})
-			i += 1
-
-		self.animations.append({
-			"name": "AnimationName",
-			"length": (self.maxTime - self.minTime).Get(),
-			"fps": self.fps,
-			"hierarchy": hierarchy
-		})
-
-	def _buildBoneKeyframeSummary(self):
+	def _buildJointKeyframeSummary(self):
+		self.jointKeyframeSummary = {}
 		# iterate curves for each bone, add frames to ordered unique list
 		for joint in self.allJoints:
 			frames = []
@@ -406,11 +402,61 @@ class ThreeJsWriter(object):
 
 			self.jointKeyframeSummary[joint.GetGUID()] = sorted(set(frames))
 
-	def _getBoneKeyframeData(self, joint):
+	def _exportKeyframeAnimations(self):
+		if self.markers:
+			print '✓     ' + str(len(self.markers)) + ' markers found, segmenting animation'
+			i = 0
+			for marker in self.markers:
+				start = marker[c4d.TLMARKER_TIME]
+				nextIndex = i + 1
+				if nextIndex < len(self.markers):
+					nextMarker = self.markers[nextIndex]
+					oneFrame = c4d.BaseTime(1, self.fps)
+					end = nextMarker[c4d.TLMARKER_TIME] - oneFrame
+				else:
+					end = self.maxTime
+
+				self._addKeyframeAnimation(marker.GetName(), start, end)
+				i += 1
+
+		else:
+			print '✓     No markers found, making single animation'
+			self._addKeyframeAnimation('Animation', self.minTime, self.maxTime)
+
+	def _addKeyframeAnimation(self, name, startTime, endTime):
+		hierarchy = []
+		i = -1
+		for joint in self.allJoints:
+			if self.jointKeyframeSummary[joint.GetGUID()]:
+				hierarchy.append({
+					"parent": i,
+					"keys": self._getBoneKeyframeData(joint, name, startTime.GetFrame(self.fps), endTime.GetFrame(self.fps))
+				})
+				i += 1
+
+		self.animations.append({
+			"name": name,
+			"length": (endTime - startTime).Get(),
+			"fps": self.fps,
+			"hierarchy": hierarchy
+		})
+
+	def _getBoneKeyframeData(self, joint, name, startFrame, endFrame):
+
+		# 2DO: only export frames in between startFrame and endFrame
+		# clean up (comments)
+		# test if current document timeline range has effect on this. if so, expand it and then return
+
 		keys = []
 		frames = self.jointKeyframeSummary[joint.GetGUID()]
 
+		if not(startFrame in frames):
+				print '?     Warning: No keyframe at the start of marker ' + name + ' for joint ' + joint.GetName()
+		if not(endFrame in frames):
+				print '?     Warning: No keyframe at the end of marker ' + name + ' for joint ' + joint.GetName()
+
 		for frame in frames:
+			#print frame > 0, 20, 21, 40
 			self._goToFrame(frame)
 			keys.append(self._getCurrentKeyframeData(joint, frame))
 		
@@ -424,8 +470,6 @@ class ThreeJsWriter(object):
 		c4d.GeSyncMessage(c4d.EVMSG_TIMECHANGED)						#update timeline
 
 	def _getCurrentKeyframeData(self, joint, frame):
-		# 2DO: Read scale
-
 		if frame == self.lastFrame:
 			lastFrameTrimProtection = 0.001
 		else:

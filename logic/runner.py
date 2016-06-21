@@ -40,8 +40,8 @@ class Runner(c4d.plugins.CommandData):
 			x = user32.GetSystemMetrics(0)/2 - winWidth/2
 			y = user32.GetSystemMetrics(1)/2 - winHeight/2
 		else:
-			x = 300
-			y = 300
+			x = 200
+			y = 200
 
 		# create a maindialog object if it hasn't been initialized jet
 		if self.__dialog is None:            
