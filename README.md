@@ -3,6 +3,8 @@ Exporter for Cinema 4D to JSON format usable in Three.js
 
 *Currently supports only Cinema 4D R17 (needs quaternions, can be solved by polyfill) and export is targeted at Three.js JSON format 3 of version r74.*
 
+![Image preview](https://github.com/BlackDice/Cinema4D-Threejs-Exporter/blob/master/preview.png?raw=true)
+
 **Currently supports these features:**
 - Vertices
 - Faces (triangles and quads)
