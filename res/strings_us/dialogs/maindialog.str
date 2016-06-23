@@ -13,6 +13,7 @@ DIALOGSTRINGS MAINDIALOG
 	FACES_STR					"Export faces";
 	NORMALS_STR					"Export normals: ";
 	UVS_STR						"Export UVs: ";
+	MARKERS_STR					"Use markers";
 	BONES_STR					"Export bones: ";
 	WEIGHTS_STR					"Export weights";
 	SKANIM_STR					"Export skeletal animations: ";
@@ -22,9 +23,13 @@ DIALOGSTRINGS MAINDIALOG
 	NORMALSVERTEX_STR			"Vertex";
 	FLIPU_STR					"Flip U";
 	FLIPV_STR					"Flip V";
-	POS_STR						"Position";
-	ROT_STR						"Rotation";
-	SCL_STR						"Scale";
-	STARTFRAMELABEL_STR			"Start frame: ";
-	ENDFRAMELABEL_STR			"End frame: ";
+	POS_STR						"Pos";
+	ROT_STR						"Rot";
+	SCL_STR						"Scl";
+	MINFRAMELABEL_STR			"Start frame: ";
+	MAXFRAMELABEL_STR			"End frame: ";
+	BLANK_STR					" ";
+	EXPORT_STR					"File";
+	GEOMETRY_STR				"Geometry";
+	ANIMATIONS_STR				"Animations";
 }

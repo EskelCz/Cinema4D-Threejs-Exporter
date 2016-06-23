@@ -31,8 +31,8 @@ class Runner(c4d.plugins.CommandData):
 			c4d.gui.MessageDialog('Error: 	✘ Selected Object is not an editable mesh')
 			return False
 
-		winWidth  = 390
-		winHeight = 570
+		winWidth  = 440
+		winHeight = 725
 
 		# center to the screen 
 		if hasattr(ctypes, 'windll'):

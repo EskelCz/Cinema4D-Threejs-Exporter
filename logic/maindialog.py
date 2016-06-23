@@ -8,11 +8,7 @@ from logic import exporter
 
 class MainDialog(c4d.gui.GeDialog):
 
-	VERSION = '0.0.2'
-
-	uvtag = None
-	weighttag = None
-	armatures = {}
+	VERSION = '0.0.3'
 
 	# called once when the dialog is initialized
 	def __init__(self):
@@ -23,6 +19,9 @@ class MainDialog(c4d.gui.GeDialog):
 	# called when the dialog is opened - load or generate the GUI here
 	def CreateLayout(self):
 
+		self.uvtag = None
+		self.weighttag = None
+		self.armatures = {}
 		self.doc = documents.GetActiveDocument()
 		self.op  = self.doc.GetActiveObject()
 
@@ -33,6 +32,14 @@ class MainDialog(c4d.gui.GeDialog):
 		# dynamic dialog changes
 		self.SetString(ids.INSTRUCTION, instruction)
 		self.SetTitle('Three.js exporter v.' + self.VERSION)
+
+		# find markers
+		self.markers = []
+		curMarker = c4d.documents.GetFirstMarker(self.doc)
+		while curMarker is not None:
+			self.markers.append(curMarker)
+			curMarker = curMarker.GetNext()
+		self.markers.sort(key=self._getMarkerSecond)
 
 		# find bones
 		for i, obj in enumerate(self.doc.GetObjects()):
@@ -55,6 +62,9 @@ class MainDialog(c4d.gui.GeDialog):
 	def InitValues(self): 
 
 		# set values
+		fps = self.doc.GetFps()
+		self.minFrame = self.doc.GetLoopMinTime().GetFrame(fps)
+		self.maxFrame = self.doc.GetLoopMaxTime().GetFrame(fps)
 		self.SetInt32(ids.PRECISION, 6)
 		self.SetBool(ids.PRETTY, True)
 		self.SetBool(ids.TRIANGULATE, True)
@@ -68,12 +78,15 @@ class MainDialog(c4d.gui.GeDialog):
 		self.SetBool(ids.WEIGHTS, True)
 		self.SetBool(ids.SKANIM, True)
 		self.SetInt32(ids.INFLUENCES, 2)
-		self.SetInt32(ids.FPS, 30)
+		self.SetInt32(ids.FPS, fps)
 		self.SetBool(ids.POS, True)
 		self.SetBool(ids.ROT, True)
+		self.SetInt32(ids.MINFRAME, self.minFrame)
+		self.SetInt32(ids.MAXFRAME, self.maxFrame)
+		self.SetBool(ids.MARKERS, True)
 
 		# disable animations if no bones found
-		if len(self.armatures) == 0:
+		if not self.armatures:
 			self.ToggleAnimation(False)
 			print '?     Warning: Joints not found'
 
@@ -86,6 +99,12 @@ class MainDialog(c4d.gui.GeDialog):
 		if self.GetBool(ids.WEIGHTS) and self.weighttag is None:
 			self.ToggleWeight(False)
 			print '?     Warning: Weight tag not found'
+
+		# disable markers if no markers found
+		if self.GetBool(ids.MARKERS) and not self.markers:
+			self.Enable(ids.MARKERS, False)
+			self.SetBool(ids.MARKERS, False)
+			print '?     Warning: No markers found'
 
 		return True
 
@@ -118,6 +137,17 @@ class MainDialog(c4d.gui.GeDialog):
 		self.SetBool(ids.POS, value)
 		self.SetBool(ids.ROT, value)
 		self.SetBool(ids.SCL, value)
+		self.Enable(ids.MARKERS, value)
+		self.SetBool(ids.MARKERS, value)
+		self.Enable(ids.MINFRAME, value)
+		self.Enable(ids.MINFRAME, value)
+		self.Enable(ids.MAXFRAMELABEL, value)
+		self.Enable(ids.MAXFRAMELABEL, value)
+
+	def _getMarkerSecond(self, marker):
+		if marker is None:
+			return None
+		return marker[c4d.TLMARKER_TIME].Get()
 
 	# called on every GUI-interaction - check the 'id' against those of
 	#your GUI elements

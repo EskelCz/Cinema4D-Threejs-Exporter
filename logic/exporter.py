@@ -43,6 +43,7 @@ class ThreeJsWriter(object):
 		currentTime = self.doc.GetTime()
 		self.currentFrame = currentTime.GetFrame(self.fps)
 		self.floatPrecision = self.dialog.GetInt32(ids.PRECISION)
+		self.markers = self.dialog.markers
 
 		print 'Exporting object \'' + self.mesh.GetName() + ':'
 		print '\n✓     Created an internal clone'
@@ -123,10 +124,42 @@ class ThreeJsWriter(object):
 
 		# Animations
 		if self.dialog.GetBool(ids.SKANIM) and self.armature:
+
+			# Save current min max values for timeline
+			oldMinTime = self.doc.GetMinTime()
+			oldMaxTime = self.doc.GetMaxTime()
+			oldLoopMinTime = self.doc.GetLoopMinTime()
+			oldLoopMaxTime = self.doc.GetLoopMaxTime()
+
+			# Set the timeline from dialog values
+			minFrame = self.dialog.GetInt32(ids.MINFRAME)
+			maxFrame = self.dialog.GetInt32(ids.MAXFRAME)
+			minTime = c4d.BaseTime(minFrame, self.fps)
+			maxTime = c4d.BaseTime(maxFrame, self.fps)
+
+			self.doc.SetMinTime(minTime)
+			self.doc.SetMaxTime(maxTime)
+			self.doc.SetLoopMinTime(minTime)
+			self.doc.SetLoopMaxTime(maxTime)
+
+			# Update time values
+			self.minTime = self.doc.GetMinTime()
+			self.maxTime = self.doc.GetMaxTime()
+			self.firstFrame = self.minTime.GetFrame(self.fps)
+			self.lastFrame = self.maxTime.GetFrame(self.fps)
+			self._goToFrame(self.firstFrame)
+
+			# Build animation data
 			self._buildJointKeyframeSummary()
-			self._buildMarkerSummary()
 			self._exportKeyframeAnimations()
 			if self.animations: self.output['animations'] = self.animations
+
+			# Return original values
+			self.doc.SetLoopMinTime(oldLoopMinTime)
+			self.doc.SetLoopMaxTime(oldLoopMaxTime)
+			self.doc.SetMinTime(oldMinTime)
+			self.doc.SetMaxTime(oldMaxTime)
+
 			print '✓     Exported keyframe animations'
 
 		# Save
@@ -366,20 +399,6 @@ class ThreeJsWriter(object):
 				self.skinWeights.append(0)
 				self.skinIndices.append(0)
 
-	def _getMarkerSecond(self, marker):
-		if marker is None:
-			return None
-		return marker[c4d.TLMARKER_TIME].Get()
-
-	def _buildMarkerSummary(self):
-		self.markers = []
-		curMarker = c4d.documents.GetFirstMarker(self.doc)
-		while curMarker is not None:
-			self.markers.append(curMarker)
-			curMarker = curMarker.GetNext()
-
-		self.markers.sort(key=self._getMarkerSecond)
-
 	def _buildJointKeyframeSummary(self):
 		self.jointKeyframeSummary = {}
 		# iterate curves for each bone, add frames to ordered unique list
@@ -403,7 +422,7 @@ class ThreeJsWriter(object):
 			self.jointKeyframeSummary[joint.GetGUID()] = sorted(set(frames))
 
 	def _exportKeyframeAnimations(self):
-		if self.markers:
+		if self.markers and self.dialog.GetBool(ids.MARKERS):
 			print '✓     ' + str(len(self.markers)) + ' markers found, segmenting animation'
 			i = 0
 			for marker in self.markers:
@@ -420,7 +439,7 @@ class ThreeJsWriter(object):
 				i += 1
 
 		else:
-			print '✓     No markers found, making single animation'
+			print '>     No markers found, making single animation'
 			self._addKeyframeAnimation('Animation', self.minTime, self.maxTime)
 
 	def _addKeyframeAnimation(self, name, startTime, endTime):
