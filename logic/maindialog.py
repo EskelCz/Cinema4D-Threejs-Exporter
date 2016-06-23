@@ -63,8 +63,8 @@ class MainDialog(c4d.gui.GeDialog):
 
 		# set values
 		fps = self.doc.GetFps()
-		self.minFrame = self.doc.GetLoopMinTime().GetFrame(fps)
-		self.maxFrame = self.doc.GetLoopMaxTime().GetFrame(fps)
+		self.minFrame = self.doc.GetMinTime().GetFrame(fps)
+		self.maxFrame = self.doc.GetMaxTime().GetFrame(fps)
 		self.SetInt32(ids.PRECISION, 6)
 		self.SetBool(ids.PRETTY, True)
 		self.SetBool(ids.TRIANGULATE, True)
