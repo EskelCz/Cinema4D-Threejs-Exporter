@@ -11,13 +11,13 @@ Exporter for Cinema 4D to JSON format usable in Three.js
 - Bones
 - Weights
 - PRS animation
-
-**Planned:**
 - Separation of multiple animations based on markers
+
+**Missing:**
+- Accepting null parent of joints
 - Scale options
 - Axis options
-
-**Possibly:**
 - Morph animations
+- Baking of animation
 - Takes
-- Baking animation
+- Tests
