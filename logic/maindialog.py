@@ -140,8 +140,8 @@ class MainDialog(c4d.gui.GeDialog):
 		self.Enable(ids.MARKERS, value)
 		self.SetBool(ids.MARKERS, value)
 		self.Enable(ids.MINFRAME, value)
-		self.Enable(ids.MINFRAME, value)
-		self.Enable(ids.MAXFRAMELABEL, value)
+		self.Enable(ids.MAXFRAME, value)
+		self.Enable(ids.MINFRAMELABEL, value)
 		self.Enable(ids.MAXFRAMELABEL, value)
 
 	def _getMarkerSecond(self, marker):
