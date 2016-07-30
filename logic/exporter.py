@@ -173,7 +173,6 @@ class ThreeJsWriter(object):
 		# Return to original frame
 		self._goToFrame(self.currentFrame)
 
-
 	"""
 	HELPER METHODS
 	"""
@@ -399,22 +398,6 @@ class ThreeJsWriter(object):
 				self.skinWeights.append(0)
 				self.skinIndices.append(0)
 
-<<<<<<< Updated upstream
-=======
-	def _getMarkerSecond(self, marker):
-		if marker is None:
-			return None
-		return marker[c4d.TLMARKER_TIME].Get()
-
-	def _buildMarkerSummary(self):
-		curMarker = c4d.documents.GetFirstMarker(self.doc)
-		while curMarker is not None:
-			self.markers.append(curMarker)
-			curMarker = curMarker.GetNext()
-
-		self.markers.sort(key=self._getMarkerSecond)
-
->>>>>>> Stashed changes
 	def _buildJointKeyframeSummary(self):
 		# iterate curves for each bone, add frames to ordered unique list
 		for joint in self.allJoints:
