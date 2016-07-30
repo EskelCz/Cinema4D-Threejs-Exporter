@@ -15,26 +15,13 @@ from c4d.utils import *
 
 class ThreeJsWriter(object):
 
-	vertices = []
-	faces = []
-	normals = []
-	uvs = []
-	faceUVMap = defaultdict(list)
-	output = OrderedDict()
-	bones = []
-	markers = []
-	skinIndices = []
-	skinWeights = []
-	influences = 0
-	animations = []
-	jointKeyframeSummary = {}
-
 	def write(self, dialog):
 
+		self.output = OrderedDict()
 		self.dialog = dialog
 		self.doc = documents.GetActiveDocument()
 		self.op  = self.doc.GetActiveObject()
-		self.mesh = self.op.GetClone() # create a clone to work on
+		self.mesh = self.op.GetClone() # work on a clone
 		self.fps = self.dialog.GetInt32(ids.FPS)
 		self.minTime = self.doc.GetMinTime()
 		self.maxTime = self.doc.GetMaxTime()
@@ -44,6 +31,19 @@ class ThreeJsWriter(object):
 		self.currentFrame = currentTime.GetFrame(self.fps)
 		self.floatPrecision = self.dialog.GetInt32(ids.PRECISION)
 		self.markers = self.dialog.markers
+
+		self.vertices = []
+		self.normals = []
+		self.uvs = []
+		self.faceUVMap = defaultdict(list)
+		self.faces = []
+		self.bones = []
+		self.influences = 0
+		self.skinIndices = []
+		self.skinWeights = []
+		self.markers = []
+		self.animations = []
+		self.jointKeyframeSummary = {}
 
 		print 'Exporting object \'' + self.mesh.GetName() + ':'
 		print '\n✓     Created an internal clone'
@@ -399,8 +399,23 @@ class ThreeJsWriter(object):
 				self.skinWeights.append(0)
 				self.skinIndices.append(0)
 
+<<<<<<< Updated upstream
+=======
+	def _getMarkerSecond(self, marker):
+		if marker is None:
+			return None
+		return marker[c4d.TLMARKER_TIME].Get()
+
+	def _buildMarkerSummary(self):
+		curMarker = c4d.documents.GetFirstMarker(self.doc)
+		while curMarker is not None:
+			self.markers.append(curMarker)
+			curMarker = curMarker.GetNext()
+
+		self.markers.sort(key=self._getMarkerSecond)
+
+>>>>>>> Stashed changes
 	def _buildJointKeyframeSummary(self):
-		self.jointKeyframeSummary = {}
 		# iterate curves for each bone, add frames to ordered unique list
 		for joint in self.allJoints:
 			frames = []
@@ -461,11 +476,6 @@ class ThreeJsWriter(object):
 		})
 
 	def _getBoneKeyframeData(self, joint, name, startFrame, endFrame):
-
-		# 2DO: only export frames in between startFrame and endFrame
-		# clean up (comments)
-		# test if current document timeline range has effect on this. if so, expand it and then return
-
 		keys = []
 		frames = self.jointKeyframeSummary[joint.GetGUID()]
 
@@ -475,9 +485,10 @@ class ThreeJsWriter(object):
 				print '?     Warning: No keyframe at the end of marker ' + name + ' for joint ' + joint.GetName()
 
 		for frame in frames:
-			#print frame > 0, 20, 21, 40
-			self._goToFrame(frame)
-			keys.append(self._getCurrentKeyframeData(joint, frame))
+			# Limit to frames within range of keyframes
+			if frame >= startFrame and frame <= endFrame:
+				self._goToFrame(frame)
+				keys.append(self._getCurrentKeyframeData(joint, frame, startFrame))
 		
 		if keys: return keys
 		else: return False
@@ -486,16 +497,16 @@ class ThreeJsWriter(object):
 		time = c4d.BaseTime(frame, self.fps)
 		self.doc.SetTime(time)
 		self.doc.ExecutePasses(None, True, True, True, c4d.BUILDFLAGS_0) 	#try BUILDFLAGS_INTERNALRENDERER
-		c4d.GeSyncMessage(c4d.EVMSG_TIMECHANGED)						#update timeline
+		c4d.GeSyncMessage(c4d.EVMSG_TIMECHANGED)							#update timeline
 
-	def _getCurrentKeyframeData(self, joint, frame):
+	def _getCurrentKeyframeData(self, joint, frame, startFrame):
 		if frame == self.lastFrame:
 			lastFrameTrimProtection = 0.001
 		else:
 			lastFrameTrimProtection = 0
 
 		keyframe = {
-			'time': float(frame - self.firstFrame) / self.fps - lastFrameTrimProtection,
+			'time': float(frame - startFrame) / self.fps - lastFrameTrimProtection,
 		}
 
 		if self.dialog.GetBool(ids.POS):
