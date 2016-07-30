@@ -50,7 +50,7 @@ class MainDialog(c4d.gui.GeDialog):
 		# find UV and Weight tag
 		for tag in self.op.GetTags():
 			tagName = tag.GetName()
-			if tagName == 'UVW' or tagName == 'UVTex':
+			if tag.GetType() == 5671: # UVWtag
 				self.uvtag = tag
 			if tagName == 'Weight':
 				self.weighttag = tag
