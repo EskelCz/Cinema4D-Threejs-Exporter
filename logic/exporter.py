@@ -78,12 +78,8 @@ class ThreeJsWriter(object):
 			print '✓     Vertex normals exported'
 
 		if self.dialog.GetBool(ids.UVS):
-			for tag in self.mesh.GetTags():
-				tagName = tag.GetName()
-				if tagName == 'UVW' or tagName == 'UVTex':
-					uvtag = tag
-			if uvtag:
-				self._exportFaceVertexUVs(uvtag)
+			if dialog.uvtag:
+				self._exportFaceVertexUVs(dialog.uvtag)
 				if self.uvs: self.output['uvs'] = [self.uvs]
 				print '✓     UVs exported'
 
@@ -110,13 +106,9 @@ class ThreeJsWriter(object):
 
 		# Weights
 		if self.dialog.GetBool(ids.WEIGHTS):
-			for tag in self.mesh.GetTags():
-				tagName = tag.GetName()
-				if tagName == 'Weight':
-					weighttag = tag
-			if weighttag:
+			if dialog.weighttag:
 				self.influences = self.dialog.GetInt32(ids.INFLUENCES)
-				self._exportWeights(weighttag, self.influences)
+				self._exportWeights(dialog.weighttag, self.influences)
 				if self.influences: self.output['influencesPerVertex'] = self.influences
 				if self.skinIndices: self.output['skinIndices'] = self.skinIndices
 				if self.skinWeights: self.output['skinWeights'] = self.skinWeights
