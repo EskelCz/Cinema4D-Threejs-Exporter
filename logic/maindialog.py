@@ -190,11 +190,19 @@ class MainDialog(c4d.gui.GeDialog):
 			self.Enable(ids.POS, False)
 			self.Enable(ids.ROT, False)
 			self.Enable(ids.SCL, False)
+			self.Enable(ids.MINFRAME, False)
+			self.Enable(ids.MAXFRAME, False)
+			self.Enable(ids.MINFRAMELABEL, False)
+			self.Enable(ids.MAXFRAMELABEL, False)
 		else:
 			self.Enable(ids.FPS, True)
 			self.Enable(ids.POS, True)
 			self.Enable(ids.ROT, True)
 			self.Enable(ids.SCL, True)
+			self.Enable(ids.MINFRAME, True)
+			self.Enable(ids.MAXFRAME, True)
+			self.Enable(ids.MINFRAMELABEL, True)
+			self.Enable(ids.MAXFRAMELABEL, True)
 
 		# "Ok"
 		if id == 1:   
