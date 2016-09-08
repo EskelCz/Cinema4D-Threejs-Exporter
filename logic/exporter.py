@@ -56,6 +56,14 @@ class ThreeJsWriter(object):
 		# Mesh export
 		if self.dialog.GetBool(ids.TRIANGULATE) == True:
 			c4d.utils.SendModelingCommand(c4d.MCOMMAND_TRIANGULATE, [self.mesh])
+			# Get updated uv and weight tags from the clone
+			for tag in self.mesh.GetTags():
+				if tag.GetType() == 5671: # UVW
+					self.dialog.uvtag = tag
+					self.uvtag = tag
+				if tag.GetType() == 1019365: # Weight
+					self.dialog.weighttag = tag
+					self.weighttag = tag
 			print '✓     Mesh triangulated'
 
 		if self.dialog.GetBool(ids.PHONG) == True:
@@ -204,6 +212,8 @@ class ThreeJsWriter(object):
 
 	def _exportVertices(self):
 		for vector in self.mesh.GetAllPoints():
+			if self.dialog.GetInt32(ids.REFERENCESELECT) == ids.GLOBAL:
+				vector = LocalToGlobal(self.mesh, vector)
 			self.vertices += [round(vector.x, self.floatPrecision)]
 			self.vertices += [round(vector.y, self.floatPrecision)]
 			self.vertices += [round(vector.z, self.floatPrecision)]
@@ -532,3 +542,4 @@ def GlobalToLocal(obj, global_pos):
 	#Returns a point in global coordinate in local space.
 	obj_mg = obj.GetMg()
 	return ~obj_mg * global_pos
+			

@@ -66,6 +66,7 @@ class MainDialog(c4d.gui.GeDialog):
 		self.maxFrame = self.doc.GetMaxTime().GetFrame(fps)
 		self.SetInt32(ids.PRECISION, 6)
 		self.SetBool(ids.PRETTY, True)
+		self.SetInt32(ids.REFERENCESELECT, ids.GLOBAL)
 		self.SetBool(ids.TRIANGULATE, True)
 		self.SetBool(ids.VERTICES, True)
 		self.SetBool(ids.FACES, True)

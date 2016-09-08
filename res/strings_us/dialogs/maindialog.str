@@ -32,4 +32,7 @@ DIALOGSTRINGS MAINDIALOG
 	EXPORT_STR					"File";
 	GEOMETRY_STR				"Geometry";
 	ANIMATIONS_STR				"Animations";
+	REFERENCESELECT_STR			"Reference frame:";
+	LOCAL_STR					"Local";
+	GLOBAL_STR					"Global";
 }
