@@ -1,7 +1,7 @@
 # Cinema4D-Threejs-Exporter
 Exporter for Cinema 4D to JSON format usable in Three.js
 
-*Currently supports only Cinema 4D R17+ (needs quaternions, can be solved by polyfill) and export is targeted at Three.js JSON format 3 of version r74.*
+*Currently supports only Cinema 4D R17+ (needs quaternions, can be solved by polyfill) and export is targeted at Three.js JSON format 3 of version r80. Also Python 2.7 is required, which is bundled with the latest version of C4D.*
 
 ![Image preview](https://github.com/BlackDice/Cinema4D-Threejs-Exporter/blob/master/preview.png?raw=true)
 
