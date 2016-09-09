@@ -24,10 +24,11 @@ class MainDialog(c4d.gui.GeDialog):
 		self.armatures = {}
 		self.doc = documents.GetActiveDocument()
 		self.op  = self.doc.GetActiveObject()
+		self.name = self.op.GetName()
 
 		# load and parse the dialog layout from the resource file
 		dialog = self.LoadDialogResource(ids.MAINDIALOG, None, flags= c4d.BFH_SCALEFIT | c4d.BFV_SCALEFIT )
-		instruction = 'Choose what to export for the selected object `' + self.op.GetName() + '`'
+		instruction = 'Choose what to export for the selected object `' + self.name + '`'
 
 		# dynamic dialog changes
 		self.SetString(ids.INSTRUCTION, instruction)
@@ -206,7 +207,7 @@ class MainDialog(c4d.gui.GeDialog):
 			self.Enable(ids.MAXFRAMELABEL, True)
 
 		# "Ok"
-		if id == 1:   
+		if id == 1:
 
 			# Save file
 			self.folder = self.doc.GetDocumentPath()
@@ -217,7 +218,7 @@ class MainDialog(c4d.gui.GeDialog):
 					c4d.gui.MessageDialog('Canceled: 	✘ Please specify an output folder')
 					return False
 			else:
-				self.path = self.folder + '/' + self.doc.GetDocumentName().replace('.c4d', '') + '.json'
+				self.path = self.folder + '/' + self.name + '.json'
 
 			writer = exporter.ThreeJsWriter()
 			writer.write(self)
