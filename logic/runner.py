@@ -24,7 +24,7 @@ class Runner(c4d.plugins.CommandData):
 
 		self.op = self.doc.GetActiveObject()
 		if self.op is None:
-			c4d.gui.MessageDialog('Error: 	✘ No selected object for export')
+			c4d.gui.MessageDialog('Error: 	✘ Select one mesh object to export')
 			return False
 
 		if self.op.GetType() != c4d.Opolygon:
