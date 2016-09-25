@@ -45,6 +45,14 @@ class ThreeJsWriter(object):
 		self.animations = []
 		self.jointKeyframeSummary = {}
 
+		self.flip = {'x': 1, 'y': 1, 'z': 1}
+		if self.dialog.GetBool(ids.FLIPX) == True:
+			self.flip['x'] = -1
+		if self.dialog.GetBool(ids.FLIPY) == True:
+			self.flip['y'] = -1
+		if self.dialog.GetBool(ids.FLIPZ) == True:
+			self.flip['z'] = -1
+
 		print 'Exporting object \'' + self.mesh.GetName() + ':'
 		print '\n✓     Created an internal clone'
 
@@ -172,6 +180,7 @@ class ThreeJsWriter(object):
 
 		# Return to original frame
 		self._goToFrame(self.currentFrame)
+		print ' ' # End with empty line to separate multiple exports
 
 	"""
 	HELPER METHODS
@@ -214,9 +223,9 @@ class ThreeJsWriter(object):
 		for vector in self.mesh.GetAllPoints():
 			if self.dialog.GetInt32(ids.REFERENCESELECT) == ids.GLOBAL:
 				vector = LocalToGlobal(self.mesh, vector)
-			self.vertices += [round(vector.x, self.floatPrecision)]
-			self.vertices += [round(vector.y, self.floatPrecision)]
-			self.vertices += [round(vector.z, self.floatPrecision)]
+			self.vertices += [round(vector.x, self.floatPrecision) * self.flip['x']]
+			self.vertices += [round(vector.y, self.floatPrecision) * self.flip['y']]
+			self.vertices += [round(vector.z, self.floatPrecision) * self.flip['z']]
 
 	def _exportFaceNormals(self):
 		for p in self.mesh.GetAllPolygons():
@@ -225,14 +234,18 @@ class ThreeJsWriter(object):
 			normal = (p2 - p1).Cross(p4 - p1).GetNormalized()
 
 			# Again polygons are in different order than blender/maya
-			self.normals.append(self._cleanFloat(normal.x))
-			self.normals.append(self._cleanFloat(normal.y))
-			self.normals.append(self._cleanFloat(normal.z))
+			self.normals.append(self._cleanFloat(normal.x) * self.flip['x'])
+			self.normals.append(self._cleanFloat(normal.y) * self.flip['y'])
+			self.normals.append(self._cleanFloat(normal.z) * self.flip['z'])
 
 	def _exportVertexNormals(self):
 		for normal in self.mesh.CreatePhongNormals():
 			if not self._isNull(normal):	# probably not good enough to separate quads
-				self.normals += [round(normal.x, self.floatPrecision), round(normal.y, self.floatPrecision), round(normal.z, self.floatPrecision)]
+				self.normals += [
+					round(normal.x, self.floatPrecision) * self.flip['x'],
+					round(normal.y, self.floatPrecision) * self.flip['y'],
+					round(normal.z, self.floatPrecision) * self.flip['z']
+				]
 
 	def _exportFaceVertexUVs(self, uvtag):
 		uniqueUVs = []

@@ -38,6 +38,9 @@ enum
 	REFERENCESELECT		= 1032,
 	GLOBAL				= 1033,
 	LOCAL				= 1034,
+	FLIPX				= 1035,
+	FLIPY				= 1036,
+	FLIPZ				= 1037,
 
 	// strings
 	PLUGIN_NAME_STR		= 2000,
@@ -73,6 +76,9 @@ enum
 	REFERENCESELECT_STR	= 2032,
 	GLOBAL_STR			= 2033,
 	LOCAL_STR			= 2034,
+	FLIPX_STR			= 2035,
+	FLIPY_STR			= 2036,
+	FLIPZ_STR			= 2037,
 
 // End of symbol definition
   _DUMMY_ELEMENT_

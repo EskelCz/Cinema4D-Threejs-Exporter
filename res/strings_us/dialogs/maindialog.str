@@ -29,10 +29,13 @@ DIALOGSTRINGS MAINDIALOG
 	MINFRAMELABEL_STR			"Start frame: ";
 	MAXFRAMELABEL_STR			"End frame: ";
 	BLANK_STR					" ";
-	EXPORT_STR					"File";
+	EXPORT_STR					"General";
 	GEOMETRY_STR				"Geometry";
 	ANIMATIONS_STR				"Animations";
 	REFERENCESELECT_STR			"Reference frame:";
 	LOCAL_STR					"Local";
 	GLOBAL_STR					"Global";
+	FLIPX_STR					"Flip X";
+	FLIPY_STR					"Flip Y";
+	FLIPZ_STR					"Flip Z";
 }
