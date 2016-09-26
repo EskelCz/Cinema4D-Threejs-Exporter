@@ -46,12 +46,16 @@ class ThreeJsWriter(object):
 		self.jointKeyframeSummary = {}
 
 		self.flip = {'x': 1, 'y': 1, 'z': 1}
+		self.flipped = False
 		if self.dialog.GetBool(ids.FLIPX) == True:
 			self.flip['x'] = -1
+			self.flipped = True
 		if self.dialog.GetBool(ids.FLIPY) == True:
 			self.flip['y'] = -1
+			self.flipped = True
 		if self.dialog.GetBool(ids.FLIPZ) == True:
 			self.flip['z'] = -1
+			self.flipped = True
 
 		print 'Exporting object \'' + self.mesh.GetName() + ':'
 		print '\n✓     Created an internal clone'
@@ -255,8 +259,12 @@ class ThreeJsWriter(object):
 			uv = uvtag.GetSlow(p)
 
 			# if the face is quad, use D vertice as well
-			if face.IsTriangle(): 	vecList = ['a', 'b', 'c']
-			else: 					vecList = ['c', 'd', 'a', 'b']
+			if self.flipped:
+				if face.IsTriangle(): 	vecList = ['c', 'b', 'a']
+				else: 					vecList = ['c', 'b', 'a', 'd']
+			else:
+				if face.IsTriangle(): 	vecList = ['a', 'b', 'c']
+				else: 					vecList = ['c', 'd', 'a', 'b']
 
 			for vec in vecList:
 				vector = uv[vec]
@@ -312,9 +320,16 @@ class ThreeJsWriter(object):
 			nVertices = self._getVertexCount(face) # is it triangle or quad
 
 			# add face vertices
-			faceData.append(face.a)
-			faceData.append(face.b)
-			faceData.append(face.c)
+			if self.flipped:
+				# flipped winding order
+				faceData.append(face.c)
+				faceData.append(face.b)
+				faceData.append(face.a)
+			else:
+				faceData.append(face.a)
+				faceData.append(face.b)
+				faceData.append(face.c)
+
 			if nVertices == 4:
 				faceData.append(face.d)
 
