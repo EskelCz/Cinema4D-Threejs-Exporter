@@ -23,3 +23,10 @@ Exporter for Cinema 4D to JSON format usable in Three.js
 - Baking of animation
 - Takes
 - Tests
+
+**How to use**
+- Close Cinema 4D.
+- Copy the contents or clone the repository into plugins folder of Cinema 4D.
+ Start Cinema 4D.
+- You should then find the plugin in menu > plugins > Three.js Exporter.
+Optionally you can then move the button anywhere in the interface, with window > customization > customize palettes.
