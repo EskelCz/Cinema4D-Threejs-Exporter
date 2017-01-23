@@ -16,6 +16,7 @@ Exporter for Cinema 4D to JSON format usable in Three.js
 - Separation of multiple animations based on markers
 
 **Missing:**
+- Materials
 - Accepting null parent of joints
 - Scale options
 - Axis options
