@@ -12,10 +12,10 @@ Exporter for Cinema 4D to JSON format usable in Three.js
 - UV maps
 - Bones
 - Weights
-- PRS animation
 - Separation of multiple animations based on markers
 
 **Missing:**
+- PRS animation
 - Materials
 - Accepting null parent of joints
 - Scale options
